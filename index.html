@@ -1,3 +1,4 @@
+2513698016
 <!DOCTYPE html>
 <html lang="en">
 
@@ -295,6 +296,21 @@
                     or new lines. System also accepts JSON array formats for advanced deployment.</p>
                 <textarea id="uidTextarea" rows="6" class="w-full input-field ff-font text-sm mb-6"
                     placeholder="2513698016&#10;1234567890&#10;..."></textarea>
+
+                <div class="mb-6 p-4 bg-[#E6EFEA] rounded-xl border border-[#D3E0DA]">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="adminMode"
+                            class="w-5 h-5 rounded border-[#D3E0DA] text-[#7FA69A] focus:ring-[#7FA69A]"
+                            onchange="toggleAdminPass(this.checked)">
+                        <span class="text-sm font-bold text-[#2F3E3A] uppercase tracking-wider">Admin Deployment (Neon
+                            DB)</span>
+                    </label>
+                    <div id="adminPassContainer" class="hidden mt-4">
+                        <input type="password" id="adminPassword" placeholder="ADMIN ACCESS KEY"
+                            class="w-full input-field ff-font text-sm">
+                    </div>
+                </div>
+
                 <div class="flex gap-4">
                     <button onclick="toggleModal(false)"
                         class="flex-1 py-4 bg-white border border-[#D3E0DA] text-[#4a5d58] font-bold rounded-xl uppercase hover:bg-[#E6EFEA] transition-all text-sm tracking-wider">Abort</button>
@@ -307,92 +323,113 @@
 
     <script>
         // --- State Management ---
-        const CACHE_KEY = 'tsun_level_tracker_cache';
-        const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+        const API_BASE = '/api';
+        const LOCAL_UIDS_KEY = 'tsun_local_uids';
 
         const LEVEL_DATA = {
             "Level": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
             "EXP": [0, 48, 202, 544, 1012, 1844, 2792, 3800, 4870, 6004, 7192, 8448, 9760, 11140, 12566, 14060, 15610, 17224, 18902, 20632]
         };
 
-        const initialUids = [
-            "14149270307", "14149270408", "14149270427", "14149270756", "14149271154", "14149271144",
-            "14149271800", "14149271808", "14149271877", "14149271991", "14149273158", "14149273237",
-            "14149273683", "14149273933", "14149273974", "14149275269", "14149275734", "14149276481",
-            "14149276495", "14149277181", "14149277252", "14149277388", "14149277415", "14149278714",
-            "14149278795", "14149278963", "14149279217", "14149279575", "14149279741", "14149279779",
-            "14149280582", "14149280696", "14149280954", "14149281069", "14149281482", "14149281775",
-            "14149282112", "14149282152", "14149282248", "14149282890", "14149282936", "14149282992",
-            "14149283176", "14149283633", "14149283954", "14149283998", "14149284197", "14149284365",
-            "14149284588", "14149284914", "14149284942", "14149285277", "14149285470", "14149286037",
-            "14149286359", "14149286972", "14149287598", "14149287778", "14149287945", "14149287993",
-            "14149288385", "14149288641", "14149289126", "14149289456", "14149290199", "14149290345",
-            "14149290380", "14149290414", "14149291178", "14149291190", "14149291367", "14149291437",
-            "14149291447", "14149292155", "14149292371", "14149292362", "14149292359", "14149292719",
-            "14149293662", "14149293851", "14149294092", "14149294401", "14149294609", "14149294880",
-            "14149301232", "14149295710", "14149295866", "14149295961", "14149296013", "14149296208",
-            "14149297352", "14149297380", "14149297659", "14149298299", "14149298778", "14149298840",
-            "14149299122", "14149299694", "14149300828", "14149301041"
-        ];
-
-        let players = loadFromCache() || initialUids.map(uid => ({ uid }));
+        let players = [];
         let currentView = 'grid';
         let activeRequests = 0;
         let filterAbove8 = false;
-        let observer;
 
         // --- Core Functions ---
         async function init() {
-            renderPlayers();
-            setupObserver();
+            await fetchPlayers();
         }
 
-        function saveToCache() {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(players));
-        }
-
-        function loadFromCache() {
-            const cached = localStorage.getItem(CACHE_KEY);
-            if (!cached) return null;
+        async function fetchPlayers() {
+            updateLoading(1);
             try {
-                return JSON.parse(cached);
+                // Fetch from Neon DB
+                const res = await fetch(`${API_BASE}/players`);
+                const dbPlayers = await res.json();
+
+                // Fetch local UIDs from localStorage
+                const localUids = getLocalUids();
+                const allPlayers = [...dbPlayers];
+
+                // Fetch data for local UIDs from external API directly (or we could add a proxy endpoint)
+                for (const uid of localUids) {
+                    if (!allPlayers.find(p => p.uid === uid)) {
+                        const localData = await fetchExternalData(uid);
+                        if (localData) allPlayers.push(localData);
+                    }
+                }
+
+                players = allPlayers;
+                renderPlayers();
             } catch (e) {
-                return null;
+                console.error("Error fetching players:", e);
+            } finally {
+                updateLoading(-1);
             }
         }
 
-        function isCacheStale(lastFetched) {
-            if (!lastFetched) return true;
-            return (Date.now() - new Date(lastFetched).getTime()) > CACHE_DURATION;
+        async function fetchExternalData(uid) {
+            try {
+                const res = await fetch(`https://fffinfo.tsunstudio.pw/get?uid=${uid}`);
+                const data = await res.json();
+                if (data && data.AccountInfo) {
+                    return {
+                        uid,
+                        name: data.AccountInfo.AccountName,
+                        level: data.AccountInfo.AccountLevel,
+                        exp: data.AccountInfo.AccountEXP,
+                        region: data.AccountInfo.AccountRegion,
+                        likes: data.AccountInfo.AccountLikes,
+                        last_update: new Date().toLocaleTimeString(),
+                        fetched: true
+                    };
+                }
+            } catch (e) {
+                console.error("External API Error:", e);
+            }
+            return null;
         }
 
-        function setupObserver() {
-            if (observer) observer.disconnect();
-            observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const uid = entry.target.dataset.uid;
-                        const player = players.find(p => p.uid === uid);
-                        if (player && (!player.fetched || isCacheStale(player.lastFetched))) {
-                            fetchData(uid);
-                        }
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1, rootMargin: '100px' });
+        function getLocalUids() {
+            const cached = localStorage.getItem(LOCAL_UIDS_KEY);
+            return cached ? JSON.parse(cached) : [];
+        }
 
-            document.querySelectorAll('[data-uid]').forEach(el => observer.observe(el));
+        function saveLocalUid(uid) {
+            const uids = getLocalUids();
+            if (!uids.includes(uid)) {
+                uids.push(uid);
+                localStorage.setItem(LOCAL_UIDS_KEY, JSON.stringify(uids));
+            }
+        }
+
+        function removeLocalUid(uid) {
+            const uids = getLocalUids().filter(u => u !== uid);
+            localStorage.setItem(LOCAL_UIDS_KEY, JSON.stringify(uids));
         }
 
         async function syncAll() {
-            // Fetch in chunks to avoid overwhelming
-            const chunks = [];
-            for (let i = 0; i < players.length; i += 5) {
-                chunks.push(players.slice(i, i + 5));
+            updateLoading(1);
+            try {
+                await fetch(`${API_BASE}/sync`, { method: 'POST' });
+                await fetchPlayers();
+            } catch (e) {
+                console.error("Sync All Error:", e);
+            } finally {
+                updateLoading(-1);
             }
+        }
 
-            for (const chunk of chunks) {
-                await Promise.all(chunk.map(p => fetchData(p.uid, true)));
+        async function syncPlayer(uid) {
+            updateLoading(1);
+            try {
+                await fetch(`${API_BASE}/sync/${uid}`, { method: 'POST' });
+                await fetchPlayers();
+            } catch (e) {
+                console.error("Sync Player Error:", e);
+            } finally {
+                updateLoading(-1);
             }
         }
 
@@ -403,40 +440,81 @@
             renderPlayers();
         }
 
-        async function fetchData(uid, force = false) {
-            const player = players.find(p => p.uid === uid);
-            if (!force && player && player.fetched && !isCacheStale(player.lastFetched)) return;
+        function toggleAdminPass(show) {
+            document.getElementById('adminPassContainer').classList.toggle('hidden', !show);
+        }
 
-            updateLoading(1);
-            try {
-                const res = await fetch(`https://fffinfo.tsunstudio.pw/get?uid=${uid}`);
-                const data = await res.json();
-
-                if (data && data.AccountInfo) {
-                    const index = players.findIndex(p => p.uid === uid);
-                    const update = {
-                        uid,
-                        name: data.AccountInfo.AccountName,
-                        level: data.AccountInfo.AccountLevel,
-                        exp: data.AccountInfo.AccountEXP,
-                        region: data.AccountInfo.AccountRegion,
-                        likes: data.AccountInfo.AccountLikes,
-                        lastUpdate: new Date().toLocaleTimeString(),
-                        lastFetched: new Date().toISOString(),
-                        fetched: true
-                    };
-
-                    if (index > -1) players[index] = update;
-                    else players.push(update);
-
-                    saveToCache();
-                    renderPlayers();
-                }
-            } catch (e) {
-                console.error("API Error for UID " + uid, e);
-            } finally {
-                updateLoading(-1);
+        async function addUidFromInput() {
+            const val = document.getElementById('uidInput').value.trim();
+            if (val) {
+                // Default to local storage for single input unless we add a toggle there too
+                // For simplicity, single input is always local
+                saveLocalUid(val);
+                await fetchPlayers();
+                document.getElementById('uidInput').value = '';
             }
+        }
+
+        async function importUids() {
+            const raw = document.getElementById('uidTextarea').value.trim();
+            const isAdmin = document.getElementById('adminMode').checked;
+            const password = document.getElementById('adminPassword').value;
+
+            let newUids = [];
+            try {
+                if (raw.startsWith('[')) newUids = JSON.parse(raw);
+                else newUids = raw.split(/[\n,\s]+/).filter(u => u);
+            } catch (e) {
+                newUids = raw.split(/[\n,\s]+/).filter(u => u);
+            }
+
+            if (isAdmin) {
+                updateLoading(1);
+                try {
+                    const res = await fetch(`${API_BASE}/adminaddplayers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uids: newUids, password })
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+                    alert("Admin sync initiated for database.");
+                } catch (e) {
+                    alert("Admin Error: " + e.message);
+                } finally {
+                    updateLoading(-1);
+                }
+            } else {
+                newUids.forEach(uid => saveLocalUid(uid.toString()));
+            }
+
+            toggleModal(false);
+            document.getElementById('uidTextarea').value = '';
+            document.getElementById('adminPassword').value = '';
+            await fetchPlayers();
+        }
+
+        async function removePlayer(uid, isAdminAdded) {
+            if (isAdminAdded) {
+                const password = prompt("Enter Admin Password to delete from Database:");
+                if (!password) return;
+
+                updateLoading(1);
+                try {
+                    const res = await fetch(`${API_BASE}/deleteplayers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uid, password })
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+                } catch (e) {
+                    alert("Delete Error: " + e.message);
+                } finally {
+                    updateLoading(-1);
+                }
+            } else {
+                removeLocalUid(uid);
+            }
+            await fetchPlayers();
         }
 
         function calculateProgress(level, currentExp) {
@@ -457,46 +535,6 @@
             };
         }
 
-        function addUidFromInput() {
-            const val = document.getElementById('uidInput').value.trim();
-            if (val) {
-                if (!players.find(p => p.uid === val)) {
-                    players.push({ uid: val });
-                    renderPlayers();
-                }
-                fetchData(val);
-                document.getElementById('uidInput').value = '';
-            }
-        }
-
-        function importUids() {
-            const raw = document.getElementById('uidTextarea').value.trim();
-            let newUids = [];
-            try {
-                if (raw.startsWith('[')) newUids = JSON.parse(raw);
-                else newUids = raw.split(/[\n,\s]+/).filter(u => u);
-            } catch (e) {
-                newUids = raw.split(/[\n,\s]+/).filter(u => u);
-            }
-
-            newUids.forEach(uid => {
-                const sUid = uid.toString();
-                if (!players.find(p => p.uid === sUid)) {
-                    players.push({ uid: sUid });
-                }
-                fetchData(sUid);
-            });
-            toggleModal(false);
-            document.getElementById('uidTextarea').value = '';
-            renderPlayers();
-        }
-
-        function removePlayer(uid) {
-            players = players.filter(p => p.uid !== uid);
-            saveToCache();
-            renderPlayers();
-        }
-
         // --- UI Utilities ---
         function formatNumber(num) {
             if (num == null) return "...";
@@ -510,14 +548,8 @@
             const empty = document.getElementById('emptyState');
             const count = document.getElementById('playersCount');
 
-            // Sort players by level (descending)
-            let displayPlayers = [...players].sort((a, b) => {
-                const lvlA = a.level || 0;
-                const lvlB = b.level || 0;
-                return lvlB - lvlA;
-            });
+            let displayPlayers = [...players].sort((a, b) => (b.level || 0) - (a.level || 0));
 
-            // Apply filter if active
             if (filterAbove8) {
                 displayPlayers = displayPlayers.filter(p => (p.level || 0) > 8);
             }
@@ -537,9 +569,7 @@
 
             const container = currentView === 'grid' ? grid : list;
             container.innerHTML = displayPlayers.map((p, idx) => {
-                const isFetched = p.fetched;
                 const prog = calculateProgress(p.level, p.exp);
-
                 const safeName = p.name || 'CONNECTING...';
                 const safeLevel = p.level != null ? p.level : '??';
                 const safeExp = formatNumber(p.exp);
@@ -547,23 +577,24 @@
                 const safeNext = formatNumber(prog.next);
                 const safeRegion = p.region || 'PENDING';
                 const safeLikes = formatNumber(p.likes);
-                const safeUpdate = p.lastUpdate || '--:--';
+                const safeUpdate = p.last_update || '--:--';
+                const isAdmin = p.is_admin_added;
 
                 if (currentView === 'grid') {
                     return `
-                    <div data-uid="${p.uid}" class="glass-card p-6 relative group animate-fade-in ${!isFetched ? 'opacity-60 grayscale' : ''}" style="animation-delay: ${idx * 0.05}s">
+                    <div class="glass-card p-6 relative group animate-fade-in" style="animation-delay: ${idx * 0.05}s">
                         <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onclick="fetchData('${p.uid}', true)" class="text-[#4a5d58] hover:text-[#7FA69A]">
+                            <button onclick="syncPlayer('${p.uid}')" class="text-[#4a5d58] hover:text-[#7FA69A]">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
-                            <button onclick="removePlayer('${p.uid}')" class="text-[#4a5d58] hover:text-[#7FA69A]">
+                            <button onclick="removePlayer('${p.uid}', ${isAdmin})" class="text-[#4a5d58] hover:text-[#7FA69A]">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                         <div class="flex items-center gap-4 mb-6">
                             <div class="w-14 h-14 bg-[#E6EFEA] rounded-xl flex items-center justify-center border border-[#D3E0DA] relative">
                                 <span class="ff-font text-2xl font-bold text-[#2F3E3A]">${safeLevel}</span>
-                                <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-[#7FA69A] rounded-full border-2 border-white"></div>
+                                <div class="absolute -bottom-1 -right-1 w-4 h-4 ${isAdmin ? 'bg-amber-500' : 'bg-[#7FA69A]'} rounded-full border-2 border-white" title="${isAdmin ? 'Database Tracked' : 'Local Tracked'}"></div>
                             </div>
                             <div class="min-w-0">
                                 <h3 class="ff-font font-bold text-[#2F3E3A] uppercase text-lg leading-tight truncate pr-4">${safeName}</h3>
@@ -601,11 +632,11 @@
                     </div>`;
                 } else {
                     return `
-                    <div data-uid="${p.uid}" class="glass-card p-5 flex flex-col md:flex-row items-center gap-6 animate-fade-in ${!isFetched ? 'opacity-60' : ''}" style="animation-delay: ${idx * 0.05}s">
+                    <div class="glass-card p-5 flex flex-col md:flex-row items-center gap-6 animate-fade-in" style="animation-delay: ${idx * 0.05}s">
                         <div class="ff-font text-3xl font-black text-[#7FA69A] w-14 h-14 bg-[#E6EFEA] rounded-lg flex items-center justify-center border border-[#D3E0DA]">${safeLevel}</div>
                         <div class="flex-1 min-w-0">
                             <h3 class="ff-font font-bold text-[#2F3E3A] uppercase truncate text-lg">${safeName}</h3>
-                            <p class="text-xs text-[#4a5d58] font-medium">${safeRegion} • ${p.uid}</p>
+                            <p class="text-xs text-[#4a5d58] font-medium">${safeRegion} • ${p.uid} ${isAdmin ? '<span class="text-amber-600 font-bold ml-2">[DB]</span>' : ''}</p>
                         </div>
                         <div class="w-full md:w-72">
                             <div class="flex justify-between text-[10px] font-bold mb-2 uppercase tracking-wider">
@@ -622,10 +653,10 @@
                                 <p class="text-sm font-bold text-[#2F3E3A]">${safeNext}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="fetchData('${p.uid}', true)" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                <button onclick="syncPlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
-                                <button onclick="removePlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                <button onclick="removePlayer('${p.uid}', ${isAdmin})" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -633,10 +664,6 @@
                     </div>`;
                 }
             }).join('');
-
-            if (observer) {
-                document.querySelectorAll('[data-uid]').forEach(el => observer.observe(el));
-            }
         }
 
         function switchView(view) {
