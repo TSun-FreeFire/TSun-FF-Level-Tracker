@@ -207,6 +207,10 @@
                         <i class="fas fa-list"></i>
                     </button>
                 </div>
+                <button onclick="syncAll()"
+                    class="bg-white text-[#7FA69A] border border-[#D3E0DA] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#E6EFEA] transition-all flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Sync All</span>
+                </button>
                 <button onclick="toggleModal(true)" class="btn-primary">
                     <i class="fas fa-plus"></i> <span class="hidden sm:inline">Add UIDs</span>
                 </button>
@@ -303,6 +307,9 @@
 
     <script>
         // --- State Management ---
+        const CACHE_KEY = 'tsun_level_tracker_cache';
+        const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
         const LEVEL_DATA = {
             "Level": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
             "EXP": [0, 48, 202, 544, 1012, 1844, 2792, 3800, 4870, 6004, 7192, 8448, 9760, 11140, 12566, 14060, 15610, 17224, 18902, 20632]
@@ -328,14 +335,56 @@
             "14149299122", "14149299694", "14149300828", "14149301041"
         ];
 
-        let players = initialUids.map(uid => ({ uid }));
+        let players = loadFromCache() || initialUids.map(uid => ({ uid }));
         let currentView = 'grid';
         let activeRequests = 0;
         let filterAbove8 = false;
+        let observer;
 
         // --- Core Functions ---
         async function init() {
             renderPlayers();
+            setupObserver();
+        }
+
+        function saveToCache() {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(players));
+        }
+
+        function loadFromCache() {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (!cached) return null;
+            try {
+                return JSON.parse(cached);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function isCacheStale(lastFetched) {
+            if (!lastFetched) return true;
+            return (Date.now() - new Date(lastFetched).getTime()) > CACHE_DURATION;
+        }
+
+        function setupObserver() {
+            if (observer) observer.disconnect();
+            observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const uid = entry.target.dataset.uid;
+                        const player = players.find(p => p.uid === uid);
+                        if (player && (!player.fetched || isCacheStale(player.lastFetched))) {
+                            fetchData(uid);
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '100px' });
+
+            document.querySelectorAll('[data-uid]').forEach(el => observer.observe(el));
+        }
+
+        async function syncAll() {
             // Fetch in chunks to avoid overwhelming
             const chunks = [];
             for (let i = 0; i < players.length; i += 5) {
@@ -343,7 +392,7 @@
             }
 
             for (const chunk of chunks) {
-                await Promise.all(chunk.map(p => fetchData(p.uid)));
+                await Promise.all(chunk.map(p => fetchData(p.uid, true)));
             }
         }
 
@@ -354,7 +403,10 @@
             renderPlayers();
         }
 
-        async function fetchData(uid) {
+        async function fetchData(uid, force = false) {
+            const player = players.find(p => p.uid === uid);
+            if (!force && player && player.fetched && !isCacheStale(player.lastFetched)) return;
+
             updateLoading(1);
             try {
                 const res = await fetch(`https://fffinfo.tsunstudio.pw/get?uid=${uid}`);
@@ -370,12 +422,14 @@
                         region: data.AccountInfo.AccountRegion,
                         likes: data.AccountInfo.AccountLikes,
                         lastUpdate: new Date().toLocaleTimeString(),
+                        lastFetched: new Date().toISOString(),
                         fetched: true
                     };
 
                     if (index > -1) players[index] = update;
                     else players.push(update);
 
+                    saveToCache();
                     renderPlayers();
                 }
             } catch (e) {
@@ -439,6 +493,7 @@
 
         function removePlayer(uid) {
             players = players.filter(p => p.uid !== uid);
+            saveToCache();
             renderPlayers();
         }
 
@@ -496,10 +551,15 @@
 
                 if (currentView === 'grid') {
                     return `
-                    <div class="glass-card p-6 relative group animate-fade-in ${!isFetched ? 'opacity-60 grayscale' : ''}" style="animation-delay: ${idx * 0.05}s">
-                        <button onclick="removePlayer('${p.uid}')" class="absolute top-4 right-4 text-[#4a5d58] hover:text-[#7FA69A] opacity-0 group-hover:opacity-100 transition-all">
-                            <i class="fas fa-times"></i>
-                        </button>
+                    <div data-uid="${p.uid}" class="glass-card p-6 relative group animate-fade-in ${!isFetched ? 'opacity-60 grayscale' : ''}" style="animation-delay: ${idx * 0.05}s">
+                        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onclick="fetchData('${p.uid}', true)" class="text-[#4a5d58] hover:text-[#7FA69A]">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button onclick="removePlayer('${p.uid}')" class="text-[#4a5d58] hover:text-[#7FA69A]">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                         <div class="flex items-center gap-4 mb-6">
                             <div class="w-14 h-14 bg-[#E6EFEA] rounded-xl flex items-center justify-center border border-[#D3E0DA] relative">
                                 <span class="ff-font text-2xl font-bold text-[#2F3E3A]">${safeLevel}</span>
@@ -541,7 +601,7 @@
                     </div>`;
                 } else {
                     return `
-                    <div class="glass-card p-5 flex flex-col md:flex-row items-center gap-6 animate-fade-in ${!isFetched ? 'opacity-60' : ''}" style="animation-delay: ${idx * 0.05}s">
+                    <div data-uid="${p.uid}" class="glass-card p-5 flex flex-col md:flex-row items-center gap-6 animate-fade-in ${!isFetched ? 'opacity-60' : ''}" style="animation-delay: ${idx * 0.05}s">
                         <div class="ff-font text-3xl font-black text-[#7FA69A] w-14 h-14 bg-[#E6EFEA] rounded-lg flex items-center justify-center border border-[#D3E0DA]">${safeLevel}</div>
                         <div class="flex-1 min-w-0">
                             <h3 class="ff-font font-bold text-[#2F3E3A] uppercase truncate text-lg">${safeName}</h3>
@@ -561,13 +621,22 @@
                                 <p class="text-[9px] text-[#4a5d58] uppercase font-bold mb-0.5">Next Level</p>
                                 <p class="text-sm font-bold text-[#2F3E3A]">${safeNext}</p>
                             </div>
-                            <button onclick="removePlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="fetchData('${p.uid}', true)" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button onclick="removePlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>`;
                 }
             }).join('');
+
+            if (observer) {
+                document.querySelectorAll('[data-uid]').forEach(el => observer.observe(el));
+            }
         }
 
         function switchView(view) {
