@@ -91,6 +91,25 @@ app.get('/api/players', async (req, res) => {
     }
 });
 
+app.get('/api/cron', async (req, res) => {
+    console.log('Cron trigger received...');
+    try {
+        const result = await pool.query('SELECT uid FROM players');
+        const uids = result.rows.map(r => r.uid);
+
+        for (let i = 0; i < uids.length; i += 5) {
+            const chunk = uids.slice(i, i + 5);
+            await Promise.all(chunk.map(async (uid) => {
+                const data = await fetchExternalData(uid);
+                await updatePlayerInDb(data);
+            }));
+        }
+        res.json({ message: 'Cron sync completed' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/sync', async (req, res) => {
     try {
         const result = await pool.query('SELECT uid FROM players');
