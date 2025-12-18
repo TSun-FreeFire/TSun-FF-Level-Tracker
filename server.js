@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 const cron = require('node-cron');
 const cors = require('cors');
 const axios = require('axios');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -82,6 +83,10 @@ async function updatePlayerInDb(playerData) {
 }
 
 // API Endpoints
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/api/players', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM players ORDER BY level DESC');
