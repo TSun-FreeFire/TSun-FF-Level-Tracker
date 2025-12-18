@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire Level Tracker | Sage Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #E6EFEA;
+            --secondary: #B7C9BF;
+            --accent: #7FA69A;
+            --accent-dark: #6a8d82;
+            --text-dark: #2F3E3A;
+            --text-dim: #4a5d58;
+            --border-color: #D3E0DA;
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text-dark);
+            font-family: 'Outfit', sans-serif;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(127, 166, 154, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(183, 201, 191, 0.2) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .ff-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .glass-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(47, 62, 58, 0.05);
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--secondary);
+            box-shadow: 0 20px 40px rgba(47, 62, 58, 0.1);
+        }
+
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--white);
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(127, 166, 154, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            box-shadow: 0 8px 25px rgba(127, 166, 154, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--white);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .modal-bg {
+            background: rgba(47, 62, 58, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        .input-field {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(127, 166, 154, 0.1);
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen pb-12">
+    <!-- Header -->
+    <header class="border-b border-[#D3E0DA] bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-[#7FA69A] to-[#B7C9BF] rounded-xl flex items-center justify-center shadow-lg shadow-[#7FA69A]/20">
+                    <i class="fas fa-leaf text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="ff-font text-xl md:text-2xl font-bold tracking-tight text-[#2F3E3A]">
+                        LEVEL <span class="text-[#7FA69A]">TRACKER</span>
+                    </h1>
+                    <p class="text-[10px] text-[#4a5d58] font-bold uppercase tracking-[0.3em]">Sage Analytics</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <div class="hidden md:flex bg-[#E6EFEA] p-1 rounded-lg border border-[#D3E0DA]">
+                    <button id="gridViewBtn" class="px-4 py-1.5 rounded-md transition-all bg-[#7FA69A] text-white"
+                        onclick="switchView('grid')">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button id="listViewBtn"
+                        class="px-4 py-1.5 rounded-md transition-all text-[#4a5d58] hover:text-[#2F3E3A]"
+                        onclick="switchView('list')">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+                <button onclick="toggleModal(true)" class="btn-primary">
+                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Add UIDs</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-10">
+        <!-- Manual Input -->
+        <section class="mb-12">
+            <div class="glass-card p-8">
+                <h2 class="ff-font text-xs font-bold text-[#7FA69A] mb-6 uppercase tracking-[0.2em]">Single Operative
+                    Entry</h2>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" id="uidInput" placeholder="ENTER PLAYER UID (e.g. 2513698016)"
+                        class="flex-1 input-field ff-font text-sm">
+                    <button onclick="addUidFromInput()" class="btn-primary px-10">
+                        Deploy Tracker
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tracker Section -->
+        <section>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="ff-font text-3xl font-bold text-[#2F3E3A] uppercase tracking-tight">Active Operatives
+                    </h2>
+                    <p class="text-sm text-[#4a5d58] mt-1">Real-time status tracking for deployed units</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="filterBtn" onclick="toggleFilter()" class="filter-btn">
+                        <i class="fas fa-filter mr-2"></i> Level > 8
+                    </button>
+                    <span id="playersCount"
+                        class="bg-[#7FA69A]/10 text-[#7FA69A] border border-[#7FA69A]/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">0
+                        TRACKED</span>
+                </div>
+            </div>
+
+            <div id="loadingIndicator" class="hidden py-12 text-center">
+                <div class="inline-block relative">
+                    <div class="w-16 h-16 border-4 border-[#7FA69A]/20 border-t-[#7FA69A] rounded-full animate-spin">
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fas fa-satellite text-[#7FA69A] animate-pulse"></i>
+                    </div>
+                </div>
+                <p class="mt-6 ff-font text-sm text-[#4a5d58] uppercase tracking-widest">Synchronizing Satellite Data...
+                </p>
+            </div>
+
+            <!-- Display Containers -->
+            <div id="playersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            <div id="playersList" class="hidden space-y-4"></div>
+
+            <!-- Empty State -->
+            <div id="emptyState"
+                class="py-32 text-center border-2 border-dashed border-[#D3E0DA] rounded-[2rem] bg-white/50">
+                <div
+                    class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 border border-[#D3E0DA] shadow-sm">
+                    <i class="fas fa-user-secret text-3xl text-[#B7C9BF]"></i>
+                </div>
+                <h3 class="ff-font text-xl text-[#4a5d58] uppercase tracking-tight">No Active Signals</h3>
+                <p class="text-[#4a5d58] mt-2 max-w-xs mx-auto">Deploy player UIDs to initiate high-frequency level
+                    tracking protocols.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Import Modal -->
+    <div id="uidModal" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-xl shadow-2xl">
+            <div class="p-6 bg-white flex justify-between items-center border-b border-[#D3E0DA]">
+                <h3 class="ff-font text-xl font-bold text-[#2F3E3A] uppercase tracking-tight">Batch Signal Import</h3>
+                <button onclick="toggleModal(false)"
+                    class="text-[#4a5d58] hover:text-[#2F3E3A] text-2xl transition-colors">&times;</button>
+            </div>
+            <div class="p-8">
+                <p class="text-sm text-[#4a5d58] mb-6 leading-relaxed">Paste multiple UIDs separated by commas, spaces,
+                    or new lines. System also accepts JSON array formats for advanced deployment.</p>
+                <textarea id="uidTextarea" rows="6" class="w-full input-field ff-font text-sm mb-6"
+                    placeholder="2513698016&#10;1234567890&#10;..."></textarea>
+                <div class="flex gap-4">
+                    <button onclick="toggleModal(false)"
+                        class="flex-1 py-4 bg-white border border-[#D3E0DA] text-[#4a5d58] font-bold rounded-xl uppercase hover:bg-[#E6EFEA] transition-all text-sm tracking-wider">Abort</button>
+                    <button onclick="importUids()"
+                        class="flex-1 py-4 bg-[#7FA69A] text-white font-bold rounded-xl uppercase hover:bg-[#6a8d82] transition-all shadow-lg shadow-[#7FA69A]/20 text-sm tracking-wider">Initialize</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const LEVEL_DATA = {
+            "Level": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+            "EXP": [0, 48, 202, 544, 1012, 1844, 2792, 3800, 4870, 6004, 7192, 8448, 9760, 11140, 12566, 14060, 15610, 17224, 18902, 20632]
+        };
+
+        const initialUids = [
+            "14149270307", "14149270408", "14149270427", "14149270756", "14149271154", "14149271144",
+            "14149271800", "14149271808", "14149271877", "14149271991", "14149273158", "14149273237",
+            "14149273683", "14149273933", "14149273974", "14149275269", "14149275734", "14149276481",
+            "14149276495", "14149277181", "14149277252", "14149277388", "14149277415", "14149278714",
+            "14149278795", "14149278963", "14149279217", "14149279575", "14149279741", "14149279779",
+            "14149280582", "14149280696", "14149280954", "14149281069", "14149281482", "14149281775",
+            "14149282112", "14149282152", "14149282248", "14149282890", "14149282936", "14149282992",
+            "14149283176", "14149283633", "14149283954", "14149283998", "14149284197", "14149284365",
+            "14149284588", "14149284914", "14149284942", "14149285277", "14149285470", "14149286037",
+            "14149286359", "14149286972", "14149287598", "14149287778", "14149287945", "14149287993",
+            "14149288385", "14149288641", "14149289126", "14149289456", "14149290199", "14149290345",
+            "14149290380", "14149290414", "14149291178", "14149291190", "14149291367", "14149291437",
+            "14149291447", "14149292155", "14149292371", "14149292362", "14149292359", "14149292719",
+            "14149293662", "14149293851", "14149294092", "14149294401", "14149294609", "14149294880",
+            "14149301232", "14149295710", "14149295866", "14149295961", "14149296013", "14149296208",
+            "14149297352", "14149297380", "14149297659", "14149298299", "14149298778", "14149298840",
+            "14149299122", "14149299694", "14149300828", "14149301041"
+        ];
+
+        let players = initialUids.map(uid => ({ uid }));
+        let currentView = 'grid';
+        let activeRequests = 0;
+        let filterAbove8 = false;
+
+        // --- Core Functions ---
+        async function init() {
+            renderPlayers();
+            // Fetch in chunks to avoid overwhelming
+            const chunks = [];
+            for (let i = 0; i < players.length; i += 5) {
+                chunks.push(players.slice(i, i + 5));
+            }
+
+            for (const chunk of chunks) {
+                await Promise.all(chunk.map(p => fetchData(p.uid)));
+            }
+        }
+
+        function toggleFilter() {
+            filterAbove8 = !filterAbove8;
+            const btn = document.getElementById('filterBtn');
+            btn.classList.toggle('active', filterAbove8);
+            renderPlayers();
+        }
+
+        async function fetchData(uid) {
+            updateLoading(1);
+            try {
+                const res = await fetch(`https://fffinfo.tsunstudio.pw/get?uid=${uid}`);
+                const data = await res.json();
+
+                if (data && data.AccountInfo) {
+                    const index = players.findIndex(p => p.uid === uid);
+                    const update = {
+                        uid,
+                        name: data.AccountInfo.AccountName,
+                        level: data.AccountInfo.AccountLevel,
+                        exp: data.AccountInfo.AccountEXP,
+                        region: data.AccountInfo.AccountRegion,
+                        likes: data.AccountInfo.AccountLikes,
+                        lastUpdate: new Date().toLocaleTimeString(),
+                        fetched: true
+                    };
+
+                    if (index > -1) players[index] = update;
+                    else players.push(update);
+
+                    renderPlayers();
+                }
+            } catch (e) {
+                console.error("API Error for UID " + uid, e);
+            } finally {
+                updateLoading(-1);
+            }
+        }
+
+        function calculateProgress(level, currentExp) {
+            if (level == null || currentExp == null) return { pct: 0, next: '...', max: '...' };
+
+            const idx = LEVEL_DATA.Level.indexOf(level);
+            if (idx === -1 || idx === LEVEL_DATA.Level.length - 1) return { pct: 100, next: 'MAX', max: 'MAX' };
+
+            const startExp = LEVEL_DATA.EXP[idx];
+            const endExp = LEVEL_DATA.EXP[idx + 1];
+            const totalInLevel = endExp - startExp;
+            const currentInLevel = currentExp - startExp;
+
+            return {
+                pct: Math.max(0, Math.min(100, (currentInLevel / totalInLevel) * 100)),
+                next: endExp - currentExp,
+                max: endExp
+            };
+        }
+
+        function addUidFromInput() {
+            const val = document.getElementById('uidInput').value.trim();
+            if (val) {
+                if (!players.find(p => p.uid === val)) {
+                    players.push({ uid: val });
+                    renderPlayers();
+                }
+                fetchData(val);
+                document.getElementById('uidInput').value = '';
+            }
+        }
+
+        function importUids() {
+            const raw = document.getElementById('uidTextarea').value.trim();
+            let newUids = [];
+            try {
+                if (raw.startsWith('[')) newUids = JSON.parse(raw);
+                else newUids = raw.split(/[\n,\s]+/).filter(u => u);
+            } catch (e) {
+                newUids = raw.split(/[\n,\s]+/).filter(u => u);
+            }
+
+            newUids.forEach(uid => {
+                const sUid = uid.toString();
+                if (!players.find(p => p.uid === sUid)) {
+                    players.push({ uid: sUid });
+                }
+                fetchData(sUid);
+            });
+            toggleModal(false);
+            document.getElementById('uidTextarea').value = '';
+            renderPlayers();
+        }
+
+        function removePlayer(uid) {
+            players = players.filter(p => p.uid !== uid);
+            renderPlayers();
+        }
+
+        // --- UI Utilities ---
+        function formatNumber(num) {
+            if (num == null) return "...";
+            if (typeof num !== 'number') return num;
+            return num.toLocaleString();
+        }
+
+        function renderPlayers() {
+            const grid = document.getElementById('playersGrid');
+            const list = document.getElementById('playersList');
+            const empty = document.getElementById('emptyState');
+            const count = document.getElementById('playersCount');
+
+            // Sort players by level (descending)
+            let displayPlayers = [...players].sort((a, b) => {
+                const lvlA = a.level || 0;
+                const lvlB = b.level || 0;
+                return lvlB - lvlA;
+            });
+
+            // Apply filter if active
+            if (filterAbove8) {
+                displayPlayers = displayPlayers.filter(p => (p.level || 0) > 8);
+            }
+
+            count.innerText = `${displayPlayers.length} TRACKED`;
+
+            if (displayPlayers.length === 0) {
+                empty.classList.remove('hidden');
+                grid.classList.add('hidden');
+                list.classList.add('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.classList.toggle('hidden', currentView !== 'grid');
+            list.classList.toggle('hidden', currentView !== 'list');
+
+            const container = currentView === 'grid' ? grid : list;
+            container.innerHTML = displayPlayers.map((p, idx) => {
+                const isFetched = p.fetched;
+                const prog = calculateProgress(p.level, p.exp);
+
+                const safeName = p.name || 'CONNECTING...';
+                const safeLevel = p.level != null ? p.level : '??';
+                const safeExp = formatNumber(p.exp);
+                const safeMaxExp = formatNumber(prog.max);
+                const safeNext = formatNumber(prog.next);
+                const safeRegion = p.region || 'PENDING';
+                const safeLikes = formatNumber(p.likes);
+                const safeUpdate = p.lastUpdate || '--:--';
+
+                if (currentView === 'grid') {
+                    return `
+                    <div class="glass-card p-6 relative group animate-fade-in ${!isFetched ? 'opacity-60 grayscale' : ''}" style="animation-delay: ${idx * 0.05}s">
+                        <button onclick="removePlayer('${p.uid}')" class="absolute top-4 right-4 text-[#4a5d58] hover:text-[#7FA69A] opacity-0 group-hover:opacity-100 transition-all">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 bg-[#E6EFEA] rounded-xl flex items-center justify-center border border-[#D3E0DA] relative">
+                                <span class="ff-font text-2xl font-bold text-[#2F3E3A]">${safeLevel}</span>
+                                <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-[#7FA69A] rounded-full border-2 border-white"></div>
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="ff-font font-bold text-[#2F3E3A] uppercase text-lg leading-tight truncate pr-4">${safeName}</h3>
+                                <p class="text-[10px] text-[#4a5d58] font-bold tracking-widest uppercase mt-1">${safeRegion} • ID: ${p.uid}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between text-[10px] font-bold uppercase mb-2 tracking-wider">
+                                    <span class="text-[#4a5d58]">Combat Experience</span>
+                                    <span class="text-[#7FA69A]">${safeExp} / ${safeMaxExp}</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${prog.pct}%"></div>
+                                </div>
+                                <p class="text-[10px] text-right mt-2 text-[#7FA69A] font-bold uppercase italic tracking-tight">
+                                    ${prog.next === 'MAX' ? 'LEVEL LIMIT REACHED' : `${safeNext} EXP TO LVL ${p.level ? p.level + 1 : '?'}`}
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-[#E6EFEA] p-3 rounded-lg border border-[#D3E0DA]">
+                                    <p class="text-[9px] uppercase text-[#4a5d58] font-bold mb-1">Total Likes</p>
+                                    <p class="text-sm font-bold text-[#2F3E3A] flex items-center gap-2">
+                                        <i class="fas fa-heart text-[#7FA69A]"></i> ${safeLikes}
+                                    </p>
+                                </div>
+                                <div class="bg-[#E6EFEA] p-3 rounded-lg border border-[#D3E0DA]">
+                                    <p class="text-[9px] uppercase text-[#4a5d58] font-bold mb-1">Last Sync</p>
+                                    <p class="text-sm font-bold text-[#2F3E3A] flex items-center gap-2">
+                                        <i class="fas fa-sync-alt text-[#4a5d58]"></i> ${safeUpdate}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="glass-card p-5 flex flex-col md:flex-row items-center gap-6 animate-fade-in ${!isFetched ? 'opacity-60' : ''}" style="animation-delay: ${idx * 0.05}s">
+                        <div class="ff-font text-3xl font-black text-[#7FA69A] w-14 h-14 bg-[#E6EFEA] rounded-lg flex items-center justify-center border border-[#D3E0DA]">${safeLevel}</div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="ff-font font-bold text-[#2F3E3A] uppercase truncate text-lg">${safeName}</h3>
+                            <p class="text-xs text-[#4a5d58] font-medium">${safeRegion} • ${p.uid}</p>
+                        </div>
+                        <div class="w-full md:w-72">
+                            <div class="flex justify-between text-[10px] font-bold mb-2 uppercase tracking-wider">
+                                <span class="text-[#4a5d58]">EXP PROGRESS</span>
+                                <span class="text-[#7FA69A]">${Math.round(prog.pct)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${prog.pct}%"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right hidden sm:block">
+                                <p class="text-[9px] text-[#4a5d58] uppercase font-bold mb-0.5">Next Level</p>
+                                <p class="text-sm font-bold text-[#2F3E3A]">${safeNext}</p>
+                            </div>
+                            <button onclick="removePlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+
+            if (view === 'grid') {
+                gridBtn.classList.add('bg-[#7FA69A]', 'text-white');
+                gridBtn.classList.remove('text-[#4a5d58]');
+                listBtn.classList.remove('bg-[#7FA69A]', 'text-white');
+                listBtn.classList.add('text-[#4a5d58]');
+            } else {
+                listBtn.classList.add('bg-[#7FA69A]', 'text-white');
+                listBtn.classList.remove('text-[#4a5d58]');
+                gridBtn.classList.remove('bg-[#7FA69A]', 'text-white');
+                gridBtn.classList.add('text-[#4a5d58]');
+            }
+            renderPlayers();
+        }
+
+        function toggleModal(show) {
+            document.getElementById('uidModal').classList.toggle('hidden', !show);
+        }
+
+        function updateLoading(delta) {
+            activeRequests += delta;
+            document.getElementById('loadingIndicator').classList.toggle('hidden', activeRequests <= 0);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
