@@ -175,6 +175,161 @@
             box-shadow: 0 0 0 4px rgba(127, 166, 154, 0.1);
             outline: none;
         }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px 12px;
+            transition: all 0.3s;
+            min-width: 320px;
+        }
+
+        .search-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(127, 166, 154, 0.1);
+        }
+
+        .search-type-dropdown {
+            position: relative;
+        }
+
+        .search-type-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .search-type-btn:hover {
+            background: var(--secondary);
+            border-color: var(--accent);
+        }
+
+        .search-type-btn i {
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+
+        .search-type-btn.active i {
+            transform: rotate(180deg);
+        }
+
+        .search-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(47, 62, 58, 0.15);
+            overflow: hidden;
+            min-width: 140px;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .search-dropdown-menu.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .search-dropdown-item {
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-dropdown-item:hover {
+            background: var(--primary);
+            color: var(--accent);
+        }
+
+        .search-dropdown-item.selected {
+            background: var(--accent);
+            color: var(--white);
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 4px 24px 4px 8px;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .search-clear-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .search-clear-btn:hover {
+            color: var(--accent);
+            background: var(--primary);
+        }
+
+        .search-icon {
+            color: var(--accent);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                min-width: 200px;
+            }
+        }
     </style>
 </head>
 
@@ -195,7 +350,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 md:gap-4">
+            <div class="flex items-center gap-2 md:gap-3">
                 <div class="hidden md:flex bg-[#E6EFEA] p-1 rounded-lg border border-[#D3E0DA]">
                     <button id="gridViewBtn" class="px-4 py-1.5 rounded-md transition-all bg-[#7FA69A] text-white"
                         onclick="switchView('grid')">
@@ -214,6 +369,35 @@
                 <button onclick="toggleModal(true)" class="btn-primary">
                     <i class="fas fa-plus"></i> <span class="hidden sm:inline">Add UIDs</span>
                 </button>
+
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <div class="search-type-dropdown">
+                        <button class="search-type-btn" onclick="toggleSearchDropdown()">
+                            <span id="searchTypeLabel">Name</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="search-dropdown-menu" id="searchDropdown">
+                            <div class="search-dropdown-item selected" onclick="setSearchType('name')">
+                                <i class="fas fa-user"></i> Name
+                            </div>
+                            <div class="search-dropdown-item" onclick="setSearchType('server')">
+                                <i class="fas fa-globe"></i> Server
+                            </div>
+                            <div class="search-dropdown-item" onclick="setSearchType('id')">
+                                <i class="fas fa-id-card"></i> ID
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-input-wrapper">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search players..." 
+                            oninput="handleSearch()">
+                        <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <i class="fas fa-search search-icon"></i>
+                </div>
             </div>
         </div>
     </header>
@@ -225,8 +409,8 @@
                 <h2 class="ff-font text-xs font-bold text-[#7FA69A] mb-6 uppercase tracking-[0.2em]">Single Operative
                     Entry</h2>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <input type="text" id="uidInput" placeholder="ENTER PLAYER UID (e.g. 2513698016)"
-                        class="flex-1 input-field ff-font text-sm">
+                    <input type="text" id="uidInput" name="uid-input-single" placeholder="ENTER PLAYER UID (e.g. 2513698016)"
+                        class="flex-1 input-field ff-font text-sm" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
                     <button onclick="addUidFromInput()" class="btn-primary px-10">
                         Deploy Tracker
                     </button>
@@ -293,8 +477,8 @@
             <div class="p-8">
                 <p class="text-sm text-[#4a5d58] mb-6 leading-relaxed">Paste multiple UIDs separated by commas, spaces,
                     or new lines. System also accepts JSON array formats for advanced deployment.</p>
-                <textarea id="uidTextarea" rows="6" class="w-full input-field ff-font text-sm mb-6"
-                    placeholder="2513698016&#10;1234567890&#10;..."></textarea>
+                <textarea id="uidTextarea" name="uid-textarea-batch" rows="6" class="w-full input-field ff-font text-sm mb-6"
+                    placeholder="2513698016&#10;1234567890&#10;..." autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"></textarea>
 
                 <div class="mb-6 p-4 bg-[#E6EFEA] rounded-xl border border-[#D3E0DA]">
                     <label class="flex items-center gap-3 cursor-pointer">
@@ -334,6 +518,35 @@
         let currentView = 'grid';
         let activeRequests = 0;
         let filterAbove8 = false;
+        let searchType = 'name';
+        let searchQuery = '';
+
+        // Region code to name mapping
+        const REGION_MAP = {
+            'EU': 'Europe',
+            'ME': 'Middle East',
+            'ID': 'Indonesia',
+            'TH': 'Thailand',
+            'VN': 'Vietnam',
+            'SG': 'Singapore',
+            'BD': 'Bangladesh',
+            'PK': 'Pakistan',
+            'MY': 'Malaysia',
+            'PH': 'Philippines',
+            'RU': 'Russia',
+            'AFR': 'Africa',
+            'BR': 'Brazil',
+            'US': 'United States',
+            'SAC': 'South America Central',
+            'NA': 'North America',
+            'IND': 'India'
+        };
+
+        // Reverse mapping for search (region name to code)
+        const REGION_NAME_TO_CODE = Object.entries(REGION_MAP).reduce((acc, [code, name]) => {
+            acc[name.toLowerCase()] = code;
+            return acc;
+        }, {});
 
         // --- Core Functions ---
         async function init() {
@@ -438,6 +651,63 @@
             btn.classList.toggle('active', filterAbove8);
             renderPlayers();
         }
+
+        function toggleSearchDropdown() {
+            const dropdown = document.getElementById('searchDropdown');
+            const btn = document.querySelector('.search-type-btn');
+            const isActive = dropdown.classList.contains('active');
+            
+            dropdown.classList.toggle('active', !isActive);
+            btn.classList.toggle('active', !isActive);
+        }
+
+        function setSearchType(type) {
+            searchType = type;
+            const label = document.getElementById('searchTypeLabel');
+            const items = document.querySelectorAll('.search-dropdown-item');
+            
+            // Update label
+            const labels = { name: 'Name', server: 'Server', id: 'ID' };
+            label.textContent = labels[type];
+            
+            // Update selected state
+            items.forEach(item => {
+                const itemType = item.textContent.trim().toLowerCase();
+                item.classList.toggle('selected', itemType === type);
+            });
+            
+            toggleSearchDropdown();
+            handleSearch(); // Re-run search with new type
+        }
+
+        function handleSearch() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('searchClearBtn');
+            searchQuery = input.value.trim().toLowerCase();
+            
+            // Show/hide clear button
+            clearBtn.classList.toggle('visible', searchQuery.length > 0);
+            
+            renderPlayers();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            searchQuery = '';
+            document.getElementById('searchClearBtn').classList.remove('visible');
+            renderPlayers();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('searchDropdown');
+            const btn = document.querySelector('.search-type-btn');
+            if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.remove('active');
+                btn.classList.remove('active');
+            }
+        });
 
         function toggleAdminPass(show) {
             document.getElementById('adminPassContainer').classList.toggle('hidden', !show);
@@ -549,8 +819,28 @@
 
             let displayPlayers = [...players].sort((a, b) => (b.level || 0) - (a.level || 0));
 
+            // Apply level filter
             if (filterAbove8) {
                 displayPlayers = displayPlayers.filter(p => (p.level || 0) > 8);
+            }
+
+            // Apply search filter
+            if (searchQuery) {
+                displayPlayers = displayPlayers.filter(p => {
+                    if (searchType === 'name') {
+                        return (p.name || '').toLowerCase().includes(searchQuery);
+                    } else if (searchType === 'server') {
+                        const region = (p.region || '').toLowerCase();
+                        const regionName = REGION_MAP[p.region.toUpperCase()];
+                        
+                        // Check if search matches region code OR full region name
+                        return region.includes(searchQuery) || 
+                               (regionName && regionName.toLowerCase().includes(searchQuery));
+                    } else if (searchType === 'id') {
+                        return (p.uid || '').toString().includes(searchQuery);
+                    }
+                    return false;
+                });
             }
 
             count.innerText = `${displayPlayers.length} TRACKED`;
@@ -574,7 +864,9 @@
                 const safeExp = formatNumber(p.exp);
                 const safeMaxExp = formatNumber(prog.max);
                 const safeNext = formatNumber(prog.next);
-                const safeRegion = p.region || 'PENDING';
+                // Display region code, fallback to original if not in mapping
+                const regionCode = p.region ? p.region.toUpperCase() : 'PENDING';
+                const safeRegion = REGION_MAP[regionCode] ? regionCode : (p.region || 'PENDING');
                 const safeLikes = formatNumber(p.likes);
                 const safeUpdate = p.last_update || '--:--';
                 const isAdmin = p.is_admin_added;
