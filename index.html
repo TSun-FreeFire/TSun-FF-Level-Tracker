@@ -344,9 +344,9 @@
                 </div>
                 <div>
                     <h1 class="ff-font text-xl md:text-2xl font-bold tracking-tight text-[#2F3E3A]">
-                        LEVEL <span class="text-[#7FA69A]">TRACKER</span>
+                        TSun <span class="text-[#7FA69A]">LEVEL TRACKER</span>
                     </h1>
-                    <p class="text-[10px] text-[#4a5d58] font-bold uppercase tracking-[0.3em]">Sage Analytics</p>
+                    <p class="text-[10px] text-[#4a5d58] font-bold uppercase tracking-[0.3em]">TSun Analytics</p>
                 </div>
             </div>
 
@@ -390,7 +390,7 @@
                         </div>
                     </div>
                     <div class="search-input-wrapper">
-                        <input type="text" class="search-input" id="searchInput" placeholder="Search players..." 
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search players..."
                             oninput="handleSearch()">
                         <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()">
                             <i class="fas fa-times"></i>
@@ -409,8 +409,9 @@
                 <h2 class="ff-font text-xs font-bold text-[#7FA69A] mb-6 uppercase tracking-[0.2em]">Single Operative
                     Entry</h2>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <input type="text" id="uidInput" name="uid-input-single" placeholder="ENTER PLAYER UID (e.g. 2513698016)"
-                        class="flex-1 input-field ff-font text-sm" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
+                    <input type="text" id="uidInput" name="uid-input-single"
+                        placeholder="ENTER PLAYER UID (e.g. 123456789)" class="flex-1 input-field ff-font text-sm"
+                        autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
                     <button onclick="addUidFromInput()" class="btn-primary px-10">
                         Deploy Tracker
                     </button>
@@ -444,7 +445,7 @@
                         <i class="fas fa-satellite text-[#7FA69A] animate-pulse"></i>
                     </div>
                 </div>
-                <p class="mt-6 ff-font text-sm text-[#4a5d58] uppercase tracking-widest">Synchronizing Satellite Data...
+                <p class="mt-6 ff-font text-sm text-[#4a5d58] uppercase tracking-widest">Synchronizing Accounts Data...
                 </p>
             </div>
 
@@ -477,8 +478,9 @@
             <div class="p-8">
                 <p class="text-sm text-[#4a5d58] mb-6 leading-relaxed">Paste multiple UIDs separated by commas, spaces,
                     or new lines. System also accepts JSON array formats for advanced deployment.</p>
-                <textarea id="uidTextarea" name="uid-textarea-batch" rows="6" class="w-full input-field ff-font text-sm mb-6"
-                    placeholder="2513698016&#10;1234567890&#10;..." autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"></textarea>
+                <textarea id="uidTextarea" name="uid-textarea-batch" rows="6"
+                    class="w-full input-field ff-font text-sm mb-6" placeholder="1234567890&#10;1234567890&#10;..."
+                    autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"></textarea>
 
                 <div class="mb-6 p-4 bg-[#E6EFEA] rounded-xl border border-[#D3E0DA]">
                     <label class="flex items-center gap-3 cursor-pointer">
@@ -510,8 +512,8 @@
         const LOCAL_UIDS_KEY = 'tsun_local_uids';
 
         const LEVEL_DATA = {
-            "Level": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-            "EXP": [0, 48, 202, 544, 1012, 1844, 2792, 3800, 4870, 6004, 7192, 8448, 9760, 11140, 12566, 14060, 15610, 17224, 18902, 20632]
+            "Level": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],
+            "EXP": [0, 48, 202, 544, 1012, 1844, 2792, 3800, 4870, 6004, 7192, 8448, 9776, 11140, 12566, 14060, 15610, 17224, 18902, 20632, 22424, 24728, 26192, 28166, 30200, 32294, 34448, 37804, 41174, 44870, 48852, 53334, 58566, 64096, 69994, 76460, 83108, 91128, 99322, 108092, 120144, 133266, 147472, 162760, 179126, 196572, 215368, 235516, 257010, 279860, 304056, 348318, 394982, 444044, 495508, 549364, 633756, 721744, 813336, 908522, 1041438, 1180352, 1325256, 1476184, 1634300, 1840946, 2056594, 2281242, 2514880, 2757530, 3059506, 3372284, 3699456, 4041030, 4397020, 4829104, 5282204, 5756304, 6251404, 6767504, 7381324, 8043154, 8752952, 9510808, 10316638, 11277190, 12360748, 13360304, 14482858, 15659418, 17026708, 18453688, 19941280, 21488570, 23095858, 24763138, 26490138, 28277708, 30124996, 32032284]
         };
 
         let players = [];
@@ -656,7 +658,7 @@
             const dropdown = document.getElementById('searchDropdown');
             const btn = document.querySelector('.search-type-btn');
             const isActive = dropdown.classList.contains('active');
-            
+
             dropdown.classList.toggle('active', !isActive);
             btn.classList.toggle('active', !isActive);
         }
@@ -665,17 +667,17 @@
             searchType = type;
             const label = document.getElementById('searchTypeLabel');
             const items = document.querySelectorAll('.search-dropdown-item');
-            
+
             // Update label
             const labels = { name: 'Name', server: 'Server', id: 'ID' };
             label.textContent = labels[type];
-            
+
             // Update selected state
             items.forEach(item => {
                 const itemType = item.textContent.trim().toLowerCase();
                 item.classList.toggle('selected', itemType === type);
             });
-            
+
             toggleSearchDropdown();
             handleSearch(); // Re-run search with new type
         }
@@ -684,10 +686,10 @@
             const input = document.getElementById('searchInput');
             const clearBtn = document.getElementById('searchClearBtn');
             searchQuery = input.value.trim().toLowerCase();
-            
+
             // Show/hide clear button
             clearBtn.classList.toggle('visible', searchQuery.length > 0);
-            
+
             renderPlayers();
         }
 
@@ -700,7 +702,7 @@
         }
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const dropdown = document.getElementById('searchDropdown');
             const btn = document.querySelector('.search-type-btn');
             if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
@@ -832,10 +834,10 @@
                     } else if (searchType === 'server') {
                         const region = (p.region || '').toLowerCase();
                         const regionName = REGION_MAP[p.region.toUpperCase()];
-                        
+
                         // Check if search matches region code OR full region name
-                        return region.includes(searchQuery) || 
-                               (regionName && regionName.toLowerCase().includes(searchQuery));
+                        return region.includes(searchQuery) ||
+                            (regionName && regionName.toLowerCase().includes(searchQuery));
                     } else if (searchType === 'id') {
                         return (p.uid || '').toString().includes(searchQuery);
                     }
