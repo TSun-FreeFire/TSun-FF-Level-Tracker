@@ -10,7 +10,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
 
-        :root {
+
+        html {
+            zoom: 0.8;
+        }
+
+        :root[data-theme="sage"] {
             --primary: #E6EFEA;
             --secondary: #B7C9BF;
             --accent: #7FA69A;
@@ -19,17 +24,52 @@
             --text-dim: #4a5d58;
             --border-color: #D3E0DA;
             --white: #ffffff;
+            --card-bg: #ffffff;
+            --header-bg: rgba(255, 255, 255, 0.8);
+            --shadow-color: rgba(47, 62, 58, 0.05);
+            --shadow-hover: rgba(47, 62, 58, 0.1);
         }
+
+        :root[data-theme="cyberpunk"] {
+            --primary: #0a0a0a;
+            --secondary: #1a1410;
+            --accent: #FF6B2C;
+            --accent-dark: #ff5214;
+            --text-dark: #ffffff;
+            --text-dim: #ffb399;
+            --border-color: rgba(255, 107, 44, 0.15);
+            --white: #ffffff;
+            --card-bg: #141414;
+            --header-bg: rgba(20, 20, 20, 0.95);
+            --shadow-color: rgba(255, 107, 44, 0.15);
+            --shadow-hover: rgba(255, 107, 44, 0.25);
+            --cyberpunk-accent-cyan: #FF8C42;
+            --cyberpunk-accent-purple: #FF4500;
+        }
+
+
 
         body {
             background-color: var(--primary);
             color: var(--text-dark);
             font-family: 'Outfit', sans-serif;
+        }
+
+        :root[data-theme="sage"] body {
             background-image:
                 radial-gradient(circle at 0% 0%, rgba(127, 166, 154, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 100% 100%, rgba(183, 201, 191, 0.2) 0%, transparent 50%);
             background-attachment: fixed;
         }
+
+        :root[data-theme="cyberpunk"] body {
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(255, 107, 44, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(255, 69, 0, 0.15) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+
 
         .ff-font {
             font-family: 'Space Grotesk', sans-serif;
@@ -344,9 +384,10 @@
                 </div>
                 <div>
                     <h1 class="ff-font text-xl md:text-2xl font-bold tracking-tight text-[#2F3E3A]">
-                        TSun <span class="text-[#7FA69A]">LEVEL TRACKER</span>
+                        TSun <span class="" style="color: var(--accent);">LEVEL TRACKER</span>
                     </h1>
-                    <p class="text-[10px] text-[#4a5d58] font-bold uppercase tracking-[0.3em]">TSun Analytics</p>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.3em]" style="color: var(--text-dim);">TSun
+                        Analytics</p>
                 </div>
             </div>
 
@@ -368,6 +409,13 @@
                 </button>
                 <button onclick="toggleModal(true)" class="btn-primary">
                     <i class="fas fa-plus"></i> <span class="hidden sm:inline">Add UIDs</span>
+                </button>
+
+                <button onclick="toggleTheme()"
+                    class="px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border hover:opacity-80"
+                    title="Toggle Theme"
+                    style="background-color: var(--card-bg); color: var(--accent); border-color: var(--border-color);">
+                    <i class="fas fa-palette"></i> <span class="hidden sm:inline">Theme</span>
                 </button>
 
                 <!-- Search Bar -->
@@ -487,7 +535,8 @@
                         <input type="checkbox" id="adminMode"
                             class="w-5 h-5 rounded border-[#D3E0DA] text-[#7FA69A] focus:ring-[#7FA69A]"
                             onchange="toggleAdminPass(this.checked)">
-                        <span class="text-sm font-bold text-[#2F3E3A] uppercase tracking-wider">Admin Deployment (Neon
+                        <span class="text-sm font-bold uppercase tracking-wider" style="color: var(--text-dark);">Admin
+                            Deployment (Neon
                             DB)</span>
                     </label>
                     <div id="adminPassContainer" class="hidden mt-4">
@@ -877,28 +926,28 @@
                     return `
                     <div class="glass-card p-6 relative group animate-fade-in" style="animation-delay: ${idx * 0.05}s">
                         <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onclick="syncPlayer('${p.uid}')" class="text-[#4a5d58] hover:text-[#7FA69A]">
+                            <button onclick="syncPlayer('${p.uid}')" class="hover:text-[var(--accent)] p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] transition-all" style="color: var(--text-dim);">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
-                            <button onclick="removePlayer('${p.uid}', ${isAdmin})" class="text-[#4a5d58] hover:text-[#7FA69A]">
+                            <button onclick="removePlayer('${p.uid}', ${isAdmin})" class="hover:text-[var(--accent)] p-1.5 rounded-lg hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] transition-all" style="color: var(--text-dim);">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                         <div class="flex items-center gap-4 mb-6">
-                            <div class="w-14 h-14 bg-[#E6EFEA] rounded-xl flex items-center justify-center border border-[#D3E0DA] relative">
-                                <span class="ff-font text-2xl font-bold text-[#2F3E3A]">${safeLevel}</span>
+                            <div class="w-14 h-14 rounded-xl flex items-center justify-center border relative" style="background: var(--primary); border-color: var(--border-color);">
+                                <span class="ff-font text-2xl font-bold" style="color: var(--text-dark);">${safeLevel}</span>
                                 <div class="absolute -bottom-1 -right-1 w-4 h-4 ${isAdmin ? 'bg-amber-500' : 'bg-[#7FA69A]'} rounded-full border-2 border-white" title="${isAdmin ? 'Database Tracked' : 'Local Tracked'}"></div>
                             </div>
                             <div class="min-w-0">
                                 <h3 class="ff-font font-bold text-[#2F3E3A] uppercase text-lg leading-tight truncate pr-4">${safeName}</h3>
-                                <p class="text-[10px] text-[#4a5d58] font-bold tracking-widest uppercase mt-1">${safeRegion} • ID: ${p.uid}</p>
+                                <p class="text-[10px] font-bold" style="color: var(--text-dim); tracking-widest uppercase mt-1">${safeRegion} • ID: ${p.uid}</p>
                             </div>
                         </div>
                         <div class="space-y-5">
                             <div>
                                 <div class="flex justify-between text-[10px] font-bold uppercase mb-2 tracking-wider">
-                                    <span class="text-[#4a5d58]">Combat Experience</span>
-                                    <span class="text-[#7FA69A]">${safeExp} / ${safeMaxExp}</span>
+                                    <span style="color: var(--text-dim);">Combat Experience</span>
+                                    <span class="" style="color: var(--accent);">${safeExp} / ${safeMaxExp}</span>
                                 </div>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${prog.pct}%"></div>
@@ -908,15 +957,15 @@
                                 </p>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-[#E6EFEA] p-3 rounded-lg border border-[#D3E0DA]">
-                                    <p class="text-[9px] uppercase text-[#4a5d58] font-bold mb-1">Total Likes</p>
-                                    <p class="text-sm font-bold text-[#2F3E3A] flex items-center gap-2">
-                                        <i class="fas fa-heart text-[#7FA69A]"></i> ${safeLikes}
+                                <div class="p-3 rounded-lg border" style="background: var(--primary); border-color: var(--border-color);">
+                                    <p class="text-[9px] uppercase font-bold" style="color: var(--text-dim); mb-1">Total Likes</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-dark); flex items-center gap-2">
+                                        <i class="fas fa-heart " style="color: var(--accent);"></i> ${safeLikes}
                                     </p>
                                 </div>
-                                <div class="bg-[#E6EFEA] p-3 rounded-lg border border-[#D3E0DA]">
-                                    <p class="text-[9px] uppercase text-[#4a5d58] font-bold mb-1">Last Sync</p>
-                                    <p class="text-sm font-bold text-[#2F3E3A] flex items-center gap-2">
+                                <div class="p-3 rounded-lg border" style="background: var(--primary); border-color: var(--border-color);">
+                                    <p class="text-[9px] uppercase font-bold" style="color: var(--text-dim); mb-1">Last Sync</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-dark); flex items-center gap-2">
                                         <i class="fas fa-sync-alt text-[#4a5d58]"></i> ${safeUpdate}
                                     </p>
                                 </div>
@@ -933,8 +982,8 @@
                         </div>
                         <div class="w-full md:w-72">
                             <div class="flex justify-between text-[10px] font-bold mb-2 uppercase tracking-wider">
-                                <span class="text-[#4a5d58]">EXP PROGRESS</span>
-                                <span class="text-[#7FA69A]">${Math.round(prog.pct)}%</span>
+                                <span style="color: var(--text-dim);">EXP PROGRESS</span>
+                                <span class="" style="color: var(--accent);">${Math.round(prog.pct)}%</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: ${prog.pct}%"></div>
@@ -943,13 +992,13 @@
                         <div class="flex items-center gap-6">
                             <div class="text-right hidden sm:block">
                                 <p class="text-[9px] text-[#4a5d58] uppercase font-bold mb-0.5">Next Level</p>
-                                <p class="text-sm font-bold text-[#2F3E3A]">${safeNext}</p>
+                                <p class="text-sm font-bold" style="color: var(--text-dark);">${safeNext}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="syncPlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                <button onclick="syncPlayer('${p.uid}')" class="w-10 h-10 rounded-lg flex items-center justify-center hover:text-[var(--accent)] hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] transition-all" style="color: var(--text-dim);">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
-                                <button onclick="removePlayer('${p.uid}', ${isAdmin})" class="w-10 h-10 rounded-lg flex items-center justify-center text-[#4a5d58] hover:text-[#7FA69A] hover:bg-[#7FA69A]/10 transition-all">
+                                <button onclick="removePlayer('${p.uid}', ${isAdmin})" class="w-10 h-10 rounded-lg flex items-center justify-center hover:text-[var(--accent)] hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] transition-all" style="color: var(--text-dim);">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -988,6 +1037,23 @@
         }
 
         window.onload = init;
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme') || 'sage';
+            const newTheme = currentTheme === 'sage' ? 'cyberpunk' : 'sage';
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'sage';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Initialize theme on load
+        initTheme();
+
     </script>
 </body>
 
