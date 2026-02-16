@@ -24,7 +24,7 @@ const pool = new Pool({
 // Helper to fetch data from external API
 async function fetchExternalData(uid) {
     try {
-        const res = await axios.get(`https://danger-info-alpha.vercel.app/web-info?uid=${uid}`, {
+        const res = await axios.get(`https://pk.fffinfo.tsunstudio.pw/get?uid=${uid}`, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             },
