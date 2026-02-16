@@ -31,15 +31,15 @@ async function fetchExternalData(uid) {
             timeout: 10000
         });
         const data = res.data;
-        if (data && data.status === "success" && data.data && data.data.basicInfo) {
-            const basicInfo = data.data.basicInfo;
+        if (data && data.AccountInfo) {
+            const info = data.AccountInfo;
             return {
                 uid,
-                name: basicInfo.nickname,
-                level: basicInfo.level,
-                exp: basicInfo.exp,
-                region: basicInfo.region,
-                likes: basicInfo.liked,
+                name: info.AccountName,
+                level: info.AccountLevel,
+                exp: info.AccountEXP,
+                region: info.AccountRegion,
+                likes: info.AccountLikes,
                 last_update: new Date().toLocaleTimeString()
             };
         }
