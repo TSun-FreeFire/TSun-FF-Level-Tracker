@@ -418,6 +418,13 @@
                     <i class="fas fa-palette"></i> <span class="hidden sm:inline">Theme</span>
                 </button>
 
+                <button onclick="handleLogout()"
+                    class="px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border hover:opacity-80"
+                    title="Logout"
+                    style="background-color: var(--card-bg); color: #ef4444; border-color: var(--border-color);">
+                    <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Logout</span>
+                </button>
+
                 <!-- Search Bar -->
                 <div class="search-container">
                     <div class="search-type-dropdown">
@@ -560,6 +567,33 @@
         const API_BASE = '/api';
         const LOCAL_UIDS_KEY = 'tsun_local_uids';
 
+        // --- Authentication Check ---
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/verify`, {
+                    credentials: 'include'
+                });
+                if (!res.ok) {
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                window.location.href = '/';
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch(`${API_BASE}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '/';
+            } catch (e) {
+                console.error('Logout error:', e);
+                window.location.href = '/';
+            }
+        }
+
         const LEVEL_DATA = {
             "Level": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],
             "EXP": [0, 48, 202, 544, 1012, 1844, 2792, 3800, 4870, 6004, 7192, 8448, 9776, 11140, 12566, 14060, 15610, 17224, 18902, 20632, 22424, 24728, 26192, 28166, 30200, 32294, 34448, 37804, 41174, 44870, 48852, 53334, 58566, 64096, 69994, 76460, 83108, 91128, 99322, 108092, 120144, 133266, 147472, 162760, 179126, 196572, 215368, 235516, 257010, 279860, 304056, 348318, 394982, 444044, 495508, 549364, 633756, 721744, 813336, 908522, 1041438, 1180352, 1325256, 1476184, 1634300, 1840946, 2056594, 2281242, 2514880, 2757530, 3059506, 3372284, 3699456, 4041030, 4397020, 4829104, 5282204, 5756304, 6251404, 6767504, 7381324, 8043154, 8752952, 9510808, 10316638, 11277190, 12360748, 13360304, 14482858, 15659418, 17026708, 18453688, 19941280, 21488570, 23095858, 24763138, 26490138, 28277708, 30124996, 32032284]
@@ -601,6 +635,7 @@
 
         // --- Core Functions ---
         async function init() {
+            await checkAuth();
             await fetchPlayers();
         }
 

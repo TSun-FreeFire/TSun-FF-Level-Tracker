@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | TSun Level Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #E6EFEA;
+            --secondary: #B7C9BF;
+            --accent: #7FA69A;
+            --accent-dark: #6a8d82;
+            --text-dark: #2F3E3A;
+            --text-dim: #4a5d58;
+            --border-color: #D3E0DA;
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text-dark);
+            font-family: 'Outfit', sans-serif;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(127, 166, 154, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(183, 201, 191, 0.2) 0%, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .ff-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .glass-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(47, 62, 58, 0.05);
+        }
+
+        .input-field {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(127, 166, 154, 0.1);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--white);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(127, 166, 154, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            box-shadow: 0 8px 25px rgba(127, 166, 154, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+        }
+
+        .lockout-timer {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-[#7FA69A] to-[#B7C9BF] rounded-xl flex items-center justify-center shadow-lg shadow-[#7FA69A]/20 mx-auto mb-4">
+                <i class="fas fa-shield-alt text-white text-2xl"></i>
+            </div>
+            <h1 class="ff-font text-2xl font-bold text-[#2F3E3A] uppercase tracking-tight">
+                TSun <span style="color: var(--accent);">SECURE ACCESS</span>
+            </h1>
+            <p class="text-sm text-[#4a5d58] mt-2">Authentication Required</p>
+        </div>
+
+        <div id="errorContainer" class="hidden"></div>
+        <div id="lockoutContainer" class="hidden"></div>
+
+        <form id="loginForm">
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-[#4a5d58] mb-2 uppercase tracking-wider">Username</label>
+                <input type="text" id="username" class="input-field" placeholder="Enter your username" required autocomplete="username">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-[#4a5d58] mb-2 uppercase tracking-wider">Password</label>
+                <input type="password" id="password" class="input-field" placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" id="loginBtn" class="btn-primary">
+                <span id="btnText">Authenticate</span>
+                <span id="btnSpinner" class="hidden"><span class="spinner"></span> Authenticating...</span>
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-[#4a5d58]">
+                New installation?
+            </p>
+            <button type="button" id="setupBtnLink" class="mt-2 text-[#7FA69A] font-bold hover:underline cursor-pointer bg-transparent border-none p-0">
+                Setup Admin Account
+            </button>
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div id="setupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(47, 62, 58, 0.4); backdrop-filter: blur(8px);">
+        <div class="glass-card w-full max-w-md p-8">
+            <h2 class="ff-font text-xl font-bold text-[#2F3E3A] uppercase tracking-tight mb-6">Setup Admin Account</h2>
+            <div id="setupErrorContainer" class="hidden"></div>
+            <form id="setupForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[#4a5d58] mb-2 uppercase tracking-wider">Username</label>
+                    <input type="text" id="setupUsername" class="input-field" placeholder="Choose a username" required autocomplete="new-username">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[#4a5d58] mb-2 uppercase tracking-wider">Password</label>
+                    <input type="password" id="setupPassword" class="input-field" placeholder="Choose a strong password" required autocomplete="new-password">
+                    <p class="text-xs text-[#4a5d58] mt-1">Min 12 chars, uppercase, lowercase, number, special char</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[#4a5d58] mb-2 uppercase tracking-wider">Confirm Password</label>
+                    <input type="password" id="setupConfirmPassword" class="input-field" placeholder="Confirm password" required autocomplete="new-password">
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="button" id="cancelSetupBtn" class="flex-1 py-3 bg-white border border-[#D3E0DA] text-[#4a5d58] font-bold rounded-xl uppercase hover:bg-[#E6EFEA] transition-all text-sm">Cancel</button>
+                    <button type="submit" id="setupSubmitBtn" class="flex-1 py-3 bg-[#7FA69A] text-white font-bold rounded-xl uppercase hover:bg-[#6a8d82] transition-all text-sm">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Login page loaded');
+
+            // Login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // Setup button
+            const setupBtnLink = document.getElementById('setupBtnLink');
+            if (setupBtnLink) {
+                setupBtnLink.addEventListener('click', showSetup);
+            }
+
+            // Setup form
+            const setupForm = document.getElementById('setupForm');
+            if (setupForm) {
+                setupForm.addEventListener('submit', handleSetup);
+            }
+
+            // Cancel setup button
+            const cancelSetupBtn = document.getElementById('cancelSetupBtn');
+            if (cancelSetupBtn) {
+                cancelSetupBtn.addEventListener('click', hideSetup);
+            }
+        });
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            console.log('Login attempt...');
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const errorContainer = document.getElementById('errorContainer');
+            const lockoutContainer = document.getElementById('lockoutContainer');
+
+            // Clear previous messages
+            errorContainer.classList.add('hidden');
+            lockoutContainer.classList.add('hidden');
+
+            // Show loading state
+            loginBtn.disabled = true;
+            btnText.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+
+                const data = await res.json();
+                console.log('Login response:', data);
+
+                if (res.ok) {
+                    // Login successful, redirect to app
+                    window.location.href = '/app';
+                } else {
+                    // Show error
+                    if (data.lockout) {
+                        lockoutContainer.innerHTML = `<div class="lockout-timer"><i class="fas fa-lock mr-2"></i>${data.error}<br><small>Locked for ${data.lockoutMinutes} minutes</small></div>`;
+                        lockoutContainer.classList.remove('hidden');
+                        startLockoutTimer(data.lockoutUntil);
+                    } else {
+                        errorContainer.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle mr-2"></i>${data.error}</div>`;
+                        errorContainer.classList.remove('hidden');
+                    }
+                }
+            } catch (e) {
+                console.error('Login error:', e);
+                errorContainer.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle mr-2"></i>Connection error. Please try again.</div>`;
+                errorContainer.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+            }
+        }
+
+        function startLockoutTimer(lockoutUntil) {
+            const lockoutContainer = document.getElementById('lockoutContainer');
+            const interval = setInterval(() => {
+                const now = Date.now();
+                const remaining = lockoutUntil - now;
+
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    lockoutContainer.classList.add('hidden');
+                    return;
+                }
+
+                const minutes = Math.ceil(remaining / 60000);
+                lockoutContainer.innerHTML = `<div class="lockout-timer"><i class="fas fa-lock mr-2"></i>Account temporarily locked<br><small>Try again in ${minutes} minute${minutes > 1 ? 's' : ''}</small></div>`;
+            }, 1000);
+        }
+
+        function showSetup() {
+            console.log('Opening setup modal...');
+            const modal = document.getElementById('setupModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                console.log('Setup modal opened');
+            } else {
+                console.error('Setup modal not found');
+            }
+        }
+
+        function hideSetup() {
+            const modal = document.getElementById('setupModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            const setupForm = document.getElementById('setupForm');
+            if (setupForm) {
+                setupForm.reset();
+            }
+            const errorContainer = document.getElementById('setupErrorContainer');
+            if (errorContainer) {
+                errorContainer.classList.add('hidden');
+            }
+        }
+
+        async function handleSetup(event) {
+            event.preventDefault();
+            console.log('Setup attempt...');
+
+            const username = document.getElementById('setupUsername').value;
+            const password = document.getElementById('setupPassword').value;
+            const confirmPassword = document.getElementById('setupConfirmPassword').value;
+            const setupSubmitBtn = document.getElementById('setupSubmitBtn');
+            const errorContainer = document.getElementById('setupErrorContainer');
+
+            if (password !== confirmPassword) {
+                errorContainer.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle mr-2"></i>Passwords do not match</div>`;
+                errorContainer.classList.remove('hidden');
+                return;
+            }
+
+            setupSubmitBtn.disabled = true;
+            setupSubmitBtn.innerHTML = '<span class="spinner"></span> Creating...';
+
+            try {
+                const res = await fetch(`${API_BASE}/setup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+                console.log('Setup response:', data);
+
+                if (res.ok) {
+                    alert('Admin account created successfully! You can now login.');
+                    hideSetup();
+                } else {
+                    errorContainer.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle mr-2"></i>${data.error}</div>`;
+                    errorContainer.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Setup error:', e);
+                errorContainer.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle mr-2"></i>Connection error: ${e.message}</div>`;
+                errorContainer.classList.remove('hidden');
+            } finally {
+                setupSubmitBtn.disabled = false;
+                setupSubmitBtn.innerHTML = 'Create Account';
+            }
+        }
+    </script>
+</body>
+
+</html>
