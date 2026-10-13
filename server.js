@@ -47,7 +47,7 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "blob:"],
             fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:"],
             connectSrc: ["'self'", "https://fffinfo.tsunstudio.pw", "https://pk.fffinfo.tsunstudio.pw"]
@@ -276,6 +276,10 @@ async function updatePlayerInDb(playerData) {
 // Public routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/login.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.js'));
 });
 
 // Protected routes

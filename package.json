@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "setup:admin": "node setup-admin.js",
-    "generate:secrets": "node generate-secrets.js"
+    "generate:secrets": "node generate-secrets.js",
+    "init:db": "node init-db.js"
   },
   "repository": {
     "type": "git",

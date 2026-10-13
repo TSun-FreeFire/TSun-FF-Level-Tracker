@@ -49,7 +49,6 @@ async function setupAdmin() {
             if (proceed.toLowerCase() !== 'yes' && proceed.toLowerCase() !== 'y') {
                 console.log('Setup cancelled.');
                 rl.close();
-                await pool.end();
                 return;
             }
         }
@@ -59,7 +58,6 @@ async function setupAdmin() {
         if (!username || username.trim().length === 0) {
             console.log('❌ Username cannot be empty.');
             rl.close();
-            await pool.end();
             return;
         }
 
@@ -68,7 +66,6 @@ async function setupAdmin() {
         if (!password || password.length === 0) {
             console.log('❌ Password cannot be empty.');
             rl.close();
-            await pool.end();
             return;
         }
 
@@ -77,7 +74,6 @@ async function setupAdmin() {
         if (!validation.valid) {
             console.log(`❌ Password validation failed: ${validation.error}`);
             rl.close();
-            await pool.end();
             return;
         }
 
@@ -86,7 +82,6 @@ async function setupAdmin() {
         if (password !== confirmPassword) {
             console.log('❌ Passwords do not match.');
             rl.close();
-            await pool.end();
             return;
         }
 
@@ -116,7 +111,11 @@ async function setupAdmin() {
         console.log('❌ Setup failed:', e.message);
     } finally {
         rl.close();
-        await pool.end();
+        try {
+            await pool.end();
+        } catch (err) {
+            // Ignore errors if pool already closed
+        }
     }
 }
 
